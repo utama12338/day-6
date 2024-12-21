@@ -2,89 +2,61 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
-
-// Local
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
-
-// Vercel
-// datasource db {
-//   provider = "postgresql"
-//   url = env("POSTGRES_PRISMA_URL") // uses connection pooling
-//   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-// }
-
-// Render Cloud
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int   @id @default(autoincrement())
-  email     String   @unique
-  firstName String
-  lastName  String
-  social    Json?
-
-  // Relation fields
+  id          Int                @id @default(autoincrement())
+  email       String             @unique
+  firstName   String
+  lastName    String
+  social      Json?
   courses     CourseEnrollment[]
-  testResults TestResult[]       @relation(name: "results")
-  testsGraded TestResult[]       @relation(name: "graded")
+  testsGraded TestResult[]       @relation("graded")
+  testResults TestResult[]       @relation("results")
 }
 
 model Course {
-  id        Int   @id @default(autoincrement())
-  name      String
+  id            Int                @id @default(autoincrement())
+  name          String
   courseDetails String?
-
-  // Relation fields
-  members CourseEnrollment[]
-  tests   Test[]
+  members       CourseEnrollment[]
+  tests         Test[]
 }
 
 model CourseEnrollment {
   createdAt DateTime @default(now())
   role      UserRole
-
-  // Relation fields
-  userId   Int
-  courseId Int
-  user     User   @relation(fields: [userId], references: [id])
-  course   Course @relation(fields: [courseId], references: [id])
+  userId    Int
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@id([userId, courseId])
 }
 
 model Test {
-  id        Int    @id @default(autoincrement())
-  updatedAt DateTime @updatedAt
-  name      String
-  date     DateTime
-
-  // Relation fields
-  courseId Int
-  course Course @relation(fields: [courseId], references: [id])
+  id          Int          @id @default(autoincrement())
+  updatedAt   DateTime     @updatedAt
+  name        String
+  date        DateTime
+  courseId    Int
+  course      Course       @relation(fields: [courseId], references: [id])
   testResults TestResult[]
 }
 
 model TestResult {
-  id        Int    @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  result Int // Percentage precision to one decimal point represented as `result * 10^-1`
-
-  // Relation fields
+  result    Int
   studentId Int
-  student   User @relation(name: "results", fields: [studentId], references: [id])
   graderId  Int
-  gradedBy  User @relation(name: "graded", fields: [graderId], references: [id])
   testId    Int
-  test      Test @relation(fields: [testId], references: [id])
+  gradedBy  User     @relation("graded", fields: [graderId], references: [id])
+  student   User     @relation("results", fields: [studentId], references: [id])
+  test      Test     @relation(fields: [testId], references: [id])
 }
 
 enum UserRole {
